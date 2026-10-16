@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Analytics — Carbon Intelligence Platform{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Analytics</h1>
+    <p class="page-subtitle">Workload trends · Resource utilization · Session comparison</p>
+  </div>
+  <select id="analytics-window" class="select-control" onchange="loadAnalytics()">
+    <option value="5">Last 5 minutes</option>
+    <option value="10" selected>Last 10 minutes</option>
+    <option value="30">Last 30 minutes</option>
+    <option value="60">Last 60 minutes</option>
+  </select>
+</div>
+
+<div class="charts-row">
+  <div class="chart-panel">
+    <div class="chart-header">
+      <span class="chart-title">Estimated power timeline</span>
+      <span class="chart-badge">Estimated · not measured</span>
+    </div>
+    <canvas id="analytics-power-chart" height="220"></canvas>
+  </div>
+  <div class="chart-panel">
+    <div class="chart-header">
+      <span class="chart-title">CPU and memory utilization</span>
+      <span class="chart-badge">OS Telemetry</span>
+    </div>
+    <canvas id="analytics-resource-chart" height="220"></canvas>
+  </div>
+</div>
+
+<div class="charts-row">
+  <div class="chart-panel">
+    <div class="chart-header">
+      <span class="chart-title">Session energy comparison</span>
+      <span class="chart-badge">Total kWh per session</span>
+    </div>
+    <canvas id="analytics-session-chart" height="220"></canvas>
+  </div>
+  <div class="chart-panel">
+    <div class="chart-header">
+      <span class="chart-title">Session CO₂e comparison</span>
+      <span class="chart-badge">Estimated g CO₂e</span>
+    </div>
+    <canvas id="analytics-co2e-chart" height="220"></canvas>
+  </div>
+</div>
+
+<div class="panel" id="session-comparison-panel">
+  <div class="panel-title">Compared with previous session</div>
+  <div id="comparison-content">
+    <div class="loading-spinner"></div>
+  </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+{% endblock %}
+

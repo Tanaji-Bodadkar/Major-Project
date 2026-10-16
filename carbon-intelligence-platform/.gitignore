@@ -1,0 +1,49 @@
+# Environment
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+ENV/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Models (large binary files — retrain locally)
+models/*.pkl
+
+# Data (potentially large / sensitive)
+data/telemetry/
+data/predictions/
+data/emissions/
+/data/measured/
+/data/processed/measured_*
+/models/measured_candidate/
+
+# Reports output
+reports/*.pdf
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Logs
+*.log
+
