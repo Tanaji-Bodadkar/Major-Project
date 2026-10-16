@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Carbon Intelligence Platform{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script>
+    try {
+      const savedTheme = localStorage.getItem('carbon-platform-theme');
+      if (savedTheme === 'dark' || savedTheme === 'light') {
+        document.documentElement.dataset.theme = savedTheme;
+      }
+    } catch (_) {}
+  </script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<a class="skip-link" href="#main-content">Skip to content</a>
+
+<nav class="navbar">
+  <a href="/" class="nav-brand">
+    <div class="brand-icon-wrap" aria-hidden="true">
+      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M23.8 7.4c-8.9.2-14.6 3.3-15.1 9.1-.3 3.8 2.2 6.3 5.6 6.3 6.4 0 9.5-7.4 9.5-15.4Z" fill="currentColor" opacity=".95"/>
+        <path d="M9.7 23.8c2.2-5.2 5.9-8.5 11.2-11" stroke="var(--brand-line)" stroke-width="1.7" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="brand-text">
+      <span class="brand-title">Carbon Intelligence</span>
+      <span class="brand-subtitle">Measure · Predict · Reduce</span>
+    </div>
+  </a>
+
+  <ul class="nav-links">
+    <li><a href="/" class="nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}" {% if request.endpoint == 'dashboard.index' %}aria-current="page"{% endif %}>
+      Dashboard
+    </a></li>
+    <li><a href="/workflow" class="nav-link {% if request.endpoint == 'dashboard.workflow' %}active{% endif %}" {% if request.endpoint == 'dashboard.workflow' %}aria-current="page"{% endif %}>
+      Workflow
+    </a></li>
+    <li><a href="/analytics" class="nav-link {% if request.endpoint == 'dashboard.analytics' %}active{% endif %}" {% if request.endpoint == 'dashboard.analytics' %}aria-current="page"{% endif %}>
+      Analytics
+    </a></li>
+    <li><a href="/recommendations" class="nav-link {% if request.endpoint == 'dashboard.recommendations' %}active{% endif %}" {% if request.endpoint == 'dashboard.recommendations' %}aria-current="page"{% endif %}>
+      Insights
+    </a></li>
+    <li><a href="/sessions" class="nav-link {% if request.endpoint == 'dashboard.sessions' %}active{% endif %}" {% if request.endpoint == 'dashboard.sessions' %}aria-current="page"{% endif %}>
+      Sessions
+    </a></li>
+  </ul>
+
+  <div class="nav-right">
+    <div class="theme-switch" role="group" aria-label="Choose color theme">
+      <button type="button" class="theme-option" data-theme-choice="light" aria-pressed="false">White</button>
+      <button type="button" class="theme-option" data-theme-choice="dark" aria-pressed="false">Black</button>
+    </div>
+    <div class="nav-status">
+      <span id="connection-indicator" class="status-dot status-connecting"></span>
+      <span id="connection-label">Connecting</span>
+    </div>
+  </div>
+</nav>
+
+<main class="main-content" id="main-content">
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <span>Carbon Intelligence Platform</span>
+    <span class="footer-sep">·</span>
+    <span>All power, energy &amp; CO₂e values are <strong>estimates</strong> — not direct electrical measurements</span>
+    <span class="footer-sep">·</span>
+    <span id="footer-time"></span>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
+

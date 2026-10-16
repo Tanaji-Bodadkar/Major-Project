@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Report — Carbon Intelligence Platform{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Session Report</h1>
+        <p class="page-subtitle">Session ID: {{ session_id }}</p>
+    </div>
+    <a href="/api/report/{{ session_id }}" class="btn btn-primary" download>
+        Download PDF report
+    </a>
+</div>
+
+<div class="alert alert-info">
+    <strong>PDF report generation</strong> requires the session to be completed.
+    The report includes power and energy summaries, carbon impact, methodology notes,
+    and ML model evaluation charts.
+</div>
+
+<div class="panel">
+    <h3 class="panel-title">Report Contents</h3>
+    <ul class="report-toc">
+        <li>Session Information (ID, timing, duration)</li>
+        <li>Estimated Power Summary (average, peak)</li>
+        <li>Estimated Energy Consumption (Wh, kWh)</li>
+        <li>Estimated Carbon Emissions — Scope 2 only (CO₂e g/kg)</li>
+        <li>Carbon Data Source and Zone</li>
+        <li>ML Model Evaluation Figures</li>
+        <li>Methodology and Limitations</li>
+        <li>Disclaimer Note</li>
+    </ul>
+    <p class="disclaimer-text">
+        All power and carbon values are <strong>estimated</strong> using the project's
+        telemetry-based ML methodology and should not be interpreted as certified emissions data.
+    </p>
+</div>
+{% endblock %}
+

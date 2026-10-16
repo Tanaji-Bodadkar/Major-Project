@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Workflow — Carbon Intelligence Platform{% endblock %}
+
+{% block content %}
+<header class="page-header workflow-hero">
+  <div>
+    <div class="page-eyebrow"><span class="eyebrow-mark"></span> HOW IT WORKS <span class="eyebrow-divider">/</span> SYSTEM FLOW</div>
+    <h1 class="page-title">From device signals to carbon insight.</h1>
+    <p class="page-subtitle">A transparent view of how the platform collects, estimates, and explains computer energy use.</p>
+  </div>
+  <div class="workflow-live-indicator"><span class="live-refresh-dot"></span>Live loop · about every 5 seconds</div>
+</header>
+
+<section class="panel workflow-section" aria-labelledby="workflow-flow-title">
+  <div class="workflow-section-heading">
+    <div>
+      <div class="section-overline">THE LIVE PIPELINE</div>
+      <h2 id="workflow-flow-title">One monitoring cycle</h2>
+      <p>Device telemetry and model predictions refresh continuously while the dashboard is open.</p>
+    </div>
+    <span class="workflow-cycle-badge"><span class="cycle-ring">↻</span> REPEATS</span>
+  </div>
+
+  <ol class="workflow-steps">
+    <li class="workflow-step">
+      <div class="workflow-step-top"><span class="workflow-number">01</span><span class="workflow-step-icon">⌁</span></div>
+      <h3>Read device signals</h3>
+      <p>Windows reports CPU load and frequency, memory, disk and network activity. GPU data is included when the device exposes it.</p>
+      <span class="workflow-step-meta">OS telemetry · ~5 sec</span>
+    </li>
+    <li class="workflow-step">
+      <div class="workflow-step-top"><span class="workflow-number">02</span><span class="workflow-step-icon">◇</span></div>
+      <h3>Prepare features</h3>
+      <p>The app converts signals into the model’s expected units and feature order. Missing GPU data stays missing and is flagged.</p>
+      <span class="workflow-step-meta">Validated inputs</span>
+    </li>
+    <li class="workflow-step">
+      <div class="workflow-step-top"><span class="workflow-number">03</span><span class="workflow-step-icon">ƒ</span></div>
+      <h3>Estimate power</h3>
+      <p>The prototype ML model estimates watts from the current telemetry. Its training targets are synthetic, so real-world accuracy is not established.</p>
+      <span class="workflow-step-meta workflow-meta-caution">Estimate · not a meter</span>
+    </li>
+    <li class="workflow-step">
+      <div class="workflow-step-top"><span class="workflow-number">04</span><span class="workflow-step-icon">∫</span></div>
+      <h3>Accumulate session energy</h3>
+      <p>While a session is active, estimated watts are integrated over elapsed time to produce Wh and kWh totals.</p>
+      <span class="workflow-step-meta">Session-based · resets on start</span>
+    </li>
+    <li class="workflow-step">
+      <div class="workflow-step-top"><span class="workflow-number">05</span><span class="workflow-step-icon">↗</span></div>
+      <h3>Estimate carbon impact</h3>
+      <p>Session energy is combined with grid carbon intensity to estimate operational Scope 2 CO₂e. If live data is unavailable, the dashboard labels its static fallback.</p>
+      <span class="workflow-step-meta">Source shown beside intensity</span>
+    </li>
+  </ol>
+
+  <div class="workflow-loop-note"><span class="workflow-loop-line" aria-hidden="true"></span><span><strong>Then the cycle starts again.</strong> The dashboard keeps a rolling view of recent telemetry and estimates.</span></div>
+</section>
+
+<section class="workflow-two-column">
+  <article class="panel workflow-explainer">
+    <div class="section-overline">WHAT YOU SEE</div>
+    <h2>Live signals and estimates are different</h2>
+    <div class="workflow-legend-row"><span class="legend-dot legend-live"></span><div><strong>Live telemetry</strong><p>CPU, memory, disk, network and available GPU readings collected from the operating system.</p></div></div>
+    <div class="workflow-legend-row"><span class="legend-dot legend-model"></span><div><strong>Model estimate</strong><p>Power, energy and CO₂e are calculated outputs. They are experimental until validated against appropriately scoped measurements.</p></div></div>
+    <div class="workflow-legend-row"><span class="legend-dot legend-source"></span><div><strong>Carbon intensity</strong><p>May come from a live provider or the clearly identified static fallback. Its update rate follows that source.</p></div></div>
+  </article>
+
+  <article class="panel workflow-validation">
+    <div class="section-overline">MODEL EVIDENCE</div>
+    <h2>How the estimate can be validated</h2>
+    <p class="workflow-validation-intro">The project includes a separate workflow for comparing telemetry with sensor logs. HWiNFO CPU Package Power is CPU-only; HWiNFO Total System Power is a platform-reported estimate, not wall-meter power.</p>
+    <div class="validation-flow">
+      <div class="validation-step"><span>1</span><strong>Capture</strong><small>HWiNFO power log + app telemetry</small></div>
+      <div class="validation-arrow" aria-hidden="true">···›</div>
+      <div class="validation-step"><span>2</span><strong>Align</strong><small>Match samples by time and session</small></div>
+      <div class="validation-arrow" aria-hidden="true">···›</div>
+      <div class="validation-step"><span>3</span><strong>Evaluate</strong><small>Hold out complete sessions</small></div>
+    </div>
+    <p class="workflow-doc-link">Detailed capture and evaluation commands are in <code>docs/measured-validation.md</code>.</p>
+  </article>
+</section>
+
+<section class="workflow-footnote"><span class="workflow-footnote-mark">i</span><p><strong>Current limitation:</strong> the live power model was trained on formula-generated targets. Its readings are exploratory estimates; the project has not established real-world accuracy or validated whole-laptop wall power.</p></section>
+{% endblock %}
+

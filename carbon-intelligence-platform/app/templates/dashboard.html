@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Carbon Intelligence Platform{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header">
+  <div>
+    <div class="page-eyebrow"><span class="eyebrow-mark"></span> DEVICE OVERVIEW <span class="eyebrow-divider">/</span> LIVE MONITORING</div>
+    <h1 class="page-title">Live dashboard</h1>
+    <p class="page-subtitle">Real-time system telemetry · ML power estimation · Carbon intelligence</p>
+    <div class="live-refresh-note"><span class="live-refresh-dot"></span><span>Device telemetry refreshes about every 5 seconds</span><span class="live-note-separator">·</span><span id="dashboard-live-time">Waiting for first reading</span></div>
+  </div>
+  <div class="session-controls">
+    <div id="session-status-badge" class="session-badge session-inactive">⬤ No Session</div>
+    <button id="btn-start-session" class="btn btn-primary" onclick="startSession()">Start session</button>
+    <button id="btn-stop-session" class="btn btn-danger hidden" onclick="stopSession()">Stop session</button>
+  </div>
+</div>
+
+<!-- Model warning banner -->
+<div id="model-status-banner" class="alert alert-warning hidden" style="margin-bottom:1rem;">
+  <strong>Model status:</strong> <span id="model-status-text"></span>
+</div>
+
+<!-- ── Metric Cards ── -->
+<div class="cards-grid">
+
+  <div class="card card-power">
+    <div class="card-heading"><span class="card-label">Estimated power</span><button type="button" class="metric-help" aria-label="About estimated power" aria-describedby="tip-power">i<span class="metric-tooltip" role="tooltip" id="tip-power">Estimated watts from the prototype model, refreshed with device telemetry about every 5 seconds. The model uses synthetic training targets, so real-world accuracy is not yet validated. This is not a direct wall-power reading.</span></button></div>
+    <div class="card-value" id="card-power">—</div>
+    <div class="card-unit">Watts</div>
+    <div class="card-bar"><div class="card-bar-fill" id="bar-power" style="width:0%;color:var(--power-color)"></div></div>
+    <div class="card-note">ML model estimate</div>
+  </div>
+
+  <div class="card card-energy">
+    <div class="card-heading"><span class="card-label">Session energy</span><button type="button" class="metric-help" aria-label="About session energy" aria-describedby="tip-energy">i<span class="metric-tooltip" role="tooltip" id="tip-energy">Energy accumulated during the active session by integrating estimated power over elapsed time. It resets when a new session starts and is an estimate, not a meter reading.</span></button></div>
+    <div class="card-value" id="card-energy">—</div>
+    <div class="card-unit">kWh</div>
+    <div class="card-bar"><div class="card-bar-fill" id="bar-energy" style="width:0%;color:var(--energy-color)"></div></div>
+    <div class="card-note">Accumulated this session</div>
+  </div>
+
+  <div class="card card-co2">
+    <div class="card-heading"><span class="card-label">Estimated CO₂e</span><button type="button" class="metric-help" aria-label="About estimated carbon emissions" aria-describedby="tip-co2">i<span class="metric-tooltip" role="tooltip" id="tip-co2">Estimated operational Scope 2 emissions: session energy multiplied by the selected electricity carbon intensity. The result depends on both estimated energy and the carbon data source.</span></button></div>
+    <div class="card-value" id="card-co2">—</div>
+    <div class="card-unit" id="card-co2-unit">g CO₂e</div>
+    <div class="card-bar"><div class="card-bar-fill" id="bar-co2" style="width:0%;color:var(--co2-color)"></div></div>
+    <div class="card-note">Scope 2 operational only</div>
+  </div>
+
+  <div class="card card-carbon-intensity">
+    <div class="card-heading"><span class="card-label">Carbon intensity</span><button type="button" class="metric-help" aria-label="About carbon intensity" aria-describedby="tip-intensity">i<span class="metric-tooltip" role="tooltip" id="tip-intensity">Grid emissions per kilowatt-hour. A configured provider supplies changing grid data; if unavailable, the app shows a labeled static fallback. Check the source note below the value.</span></button></div>
+    <div class="card-value" id="card-intensity">—</div>
+    <div class="card-unit">gCO₂e / kWh</div>
+    <div class="card-bar"><div class="card-bar-fill" id="bar-intensity" style="width:0%;color:var(--intensity-color)"></div></div>
+    <div class="card-note" id="card-intensity-source">Loading…</div>
+  </div>
+
+  <div class="card card-duration">
+    <div class="card-heading"><span class="card-label">Session duration</span><button type="button" class="metric-help" aria-label="About session duration" aria-describedby="tip-duration">i<span class="metric-tooltip" role="tooltip" id="tip-duration">Elapsed time since you started this monitoring session. The dashboard refreshes session status about every 5 seconds.</span></button></div>
+    <div class="card-value" id="card-duration" style="font-size:1.5rem;">—</div>
+    <div class="card-unit"></div>
+    <div class="card-bar"><div class="card-bar-fill" id="bar-duration" style="width:0%;color:var(--duration-color)"></div></div>
+    <div class="card-note" id="card-duration-note">No active session</div>
+  </div>
+
+  <div class="card card-cpu">
+    <div class="card-heading"><span class="card-label">CPU utilization</span><button type="button" class="metric-help" aria-label="About CPU utilization" aria-describedby="tip-cpu">i<span class="metric-tooltip" role="tooltip" id="tip-cpu">Current CPU utilization reported by Windows telemetry. This is a live device metric, not a power measurement. GPU readings may be unavailable depending on hardware and driver support.</span></button></div>
+    <div class="card-value" id="card-cpu">—</div>
+    <div class="card-unit">%</div>
+    <div class="card-bar"><div class="card-bar-fill" id="bar-cpu" style="width:0%;color:var(--cpu-color)"></div></div>
+    <div class="card-note" id="card-cpu-freq">—</div>
+  </div>
+
+</div>
+
+<!-- ── Charts ── -->
+<div class="charts-row">
+  <div class="chart-panel">
+    <div class="chart-header">
+      <span class="chart-title">Estimated power over time</span>
+      <span class="chart-badge">ML Predicted</span>
+    </div>
+    <canvas id="chart-power" height="180"></canvas>
+  </div>
+  <div class="chart-panel">
+    <div class="chart-header">
+      <span class="chart-title">CPU and memory utilization</span>
+      <span class="chart-badge">Live Telemetry</span>
+    </div>
+    <canvas id="chart-resources" height="180"></canvas>
+  </div>
+</div>
+
+<!-- ── Detail Grid ── -->
+<div class="detail-grid">
+
+  <!-- System Telemetry -->
+  <div class="detail-panel">
+    <div class="panel-title">System telemetry</div>
+    <div class="telemetry-table">
+
+      <div class="telem-row telem-with-bar">
+        <span class="telem-label">CPU Utilization</span>
+        <div class="telem-mini-bar"><div class="telem-mini-bar-fill" id="mbar-cpu" style="width:0%;background:var(--cpu-color)"></div></div>
+        <span class="telem-value" id="telem-cpu-util">—</span>
+      </div>
+
+      <div class="telem-row">
+        <span class="telem-label">CPU Frequency</span>
+        <span class="telem-value" id="telem-cpu-freq">—</span>
+      </div>
+
+      <div class="telem-row telem-with-bar">
+        <span class="telem-label">RAM Used</span>
+        <div class="telem-mini-bar"><div class="telem-mini-bar-fill" id="mbar-ram" style="width:0%;background:var(--ram-color)"></div></div>
+        <span class="telem-value" id="telem-ram-used">—</span>
+      </div>
+
+      <div class="telem-row">
+        <span class="telem-label">RAM Available</span>
+        <span class="telem-value" id="telem-ram-avail">—</span>
+      </div>
+
+      <div class="telem-row">
+        <span class="telem-label">Disk Read</span>
+        <span class="telem-value" id="telem-disk-read">—</span>
+      </div>
+
+      <div class="telem-row">
+        <span class="telem-label">Disk Write</span>
+        <span class="telem-value" id="telem-disk-write">—</span>
+      </div>
+
+      <div class="telem-row">
+        <span class="telem-label">Network ↓</span>
+        <span class="telem-value" id="telem-net-recv">—</span>
+      </div>
+
+      <div class="telem-row">
+        <span class="telem-label">Network ↑</span>
+        <span class="telem-value" id="telem-net-sent">—</span>
+      </div>
+
+      <div class="telem-row">
+        <span class="telem-label">GPU</span>
+        <span class="telem-value" id="telem-gpu">—</span>
+      </div>
+
+    </div>
+    <div class="telemetry-timestamp">Updated: <span id="telem-timestamp">—</span></div>
+  </div>
+
+  <!-- Energy Summary -->
+  <div class="detail-panel">
+    <div class="panel-title">Energy and carbon summary</div>
+    <div class="telemetry-table">
+
+      <div class="telem-row">
+        <span class="telem-label">Current Power</span>
+        <span class="telem-value" style="color:var(--power-color)" id="energy-current">—</span>
+      </div>
+      <div class="telem-row">
+        <span class="telem-label">Peak Power</span>
+        <span class="telem-value" style="color:var(--power-color)" id="energy-peak">—</span>
+      </div>
+      <div class="telem-row">
+        <span class="telem-label">Average Power</span>
+        <span class="telem-value" style="color:var(--power-color)" id="energy-avg">—</span>
+      </div>
+
+      <div class="divider" style="margin:0.5rem 0"></div>
+
+      <div class="telem-row">
+        <span class="telem-label">Session Energy</span>
+        <span class="telem-value" style="color:var(--energy-color)" id="energy-wh">—</span>
+      </div>
+      <div class="telem-row">
+        <span class="telem-label">Session Energy</span>
+        <span class="telem-value" style="color:var(--energy-color)" id="energy-kwh">—</span>
+      </div>
+
+      <div class="divider" style="margin:0.5rem 0"></div>
+
+      <div class="telem-row">
+        <span class="telem-label">Estimated CO₂e</span>
+        <span class="telem-value" style="color:var(--co2-color)" id="co2e-full">—</span>
+      </div>
+      <div class="telem-row">
+        <span class="telem-label">Carbon Intensity</span>
+        <span class="telem-value" style="color:var(--intensity-color)" id="intensity-full">—</span>
+      </div>
+      <div class="telem-row telem-row-source">
+        <span class="telem-label">Data Source</span>
+        <span class="telem-value" id="intensity-source-full">—</span>
+      </div>
+      <div class="telem-row">
+        <span class="telem-label">Grid Zone</span>
+        <span class="telem-value" id="intensity-zone">—</span>
+      </div>
+    </div>
+    <div id="carbon-fallback-notice" class="fallback-notice hidden"></div>
+  </div>
+
+  <!-- Top Processes -->
+  <div class="detail-panel">
+    <div class="panel-title">Processes by CPU use</div>
+    <div id="process-list" class="process-list">
+      <div class="process-header">
+        <span>Process</span><span>CPU %</span><span>RAM</span>
+      </div>
+    </div>
+    <div class="process-note">
+      OS-reported CPU% per process. Process-level power attribution is not supported by this methodology.
+    </div>
+  </div>
+
+</div>
+
+<!-- ── What-If Analysis ── -->
+<div class="panel">
+  <div class="panel-title">Scenario analysis</div>
+  <p class="panel-desc">
+    Project additional energy and carbon cost for a hypothetical workload continuation.
+    All outputs are clearly labeled as <strong style="color:var(--warning-color)">projected estimates</strong>.
+  </p>
+  <div class="whatif-form">
+    <div class="form-group">
+      <label>Power (W)</label>
+      <input type="number" id="wi-power" placeholder="e.g. 90" step="0.1" min="0">
+    </div>
+    <div class="form-group">
+      <label>Additional Hours</label>
+      <input type="number" id="wi-hours" placeholder="e.g. 2.5" step="0.5" min="0">
+    </div>
+    <div class="form-group">
+      <label>Carbon Intensity (gCO₂e/kWh)</label>
+      <input type="number" id="wi-intensity" placeholder="e.g. 520" step="1" min="0">
+    </div>
+    <button class="btn btn-secondary" onclick="runWhatIf()">Calculate Projection</button>
+  </div>
+  <div id="whatif-results" class="whatif-results hidden">
+    <div class="whatif-banner">Projected estimate · not actual consumption</div>
+    <div class="whatif-values">
+      <div><span>Additional Energy</span><strong id="wi-energy">—</strong></div>
+      <div><span>Additional CO₂e</span><strong id="wi-co2e">—</strong></div>
+      <div><span>Duration</span><strong id="wi-duration">—</strong></div>
+    </div>
+    <p class="whatif-disclaimer" id="wi-disclaimer"></p>
+  </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
+
